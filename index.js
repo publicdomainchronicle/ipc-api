@@ -1,5 +1,6 @@
 var fs = require('fs')
 var fuzzysearch = require('fuzzysearch')
+var multistream = require('multistream')
 var ndjson = require('ndjson')
 var path = require('path')
 var pump = require('pump')
@@ -12,8 +13,8 @@ var META = {
   version: require('./package.json').version
 }
 
-var scheme = path.join(__dirname, 'data', 'ipc_scheme.json')
-var catchwords = path.join(__dirname, 'data', 'ipc_catchwordindex.json')
+var SCHEME = path.join(__dirname, 'data', 'ipc_scheme.json')
+var CATCHWORDS = path.join(__dirname, 'data', 'ipc_catchwordindex.json')
 
 module.exports = function (log, request, response) {
   request.log = log.child({request: uuid()})
@@ -32,30 +33,39 @@ module.exports = function (log, request, response) {
     var first = true
     if (search) {
       pump(
-        fs.createReadStream(catchwords),
-        ndjson.parse(),
-        through2.obj(function (chunk, _, done) {
-          if (fuzzysearch(search, chunk[0])) {
-            if (first) {
-              first = false
-            } else {
-              this.push('\n')
-            }
-            this.push(
-              chunk[0] + '\t' +
-              chunk[1].join(',')
-            )
-          }
-          done()
-        }),
+        multistream([
+          pump(
+            fs.createReadStream(SCHEME),
+            ndjson.parse(),
+            through2.obj(function (chunk, _, done) {
+              if (chunk[0].includes(search)) {
+                separator(this)
+                this.push('\t' + chunk[0])
+              }
+              done()
+            })
+          ),
+          pump(
+            fs.createReadStream(CATCHWORDS),
+            ndjson.parse(),
+            through2.obj(function (chunk, _, done) {
+              if (fuzzysearch(search, chunk[0])) {
+                separator(this)
+                this.push(chunk[0] + '\t' + chunk[1].join(','))
+              }
+              done()
+            })
+          )
+        ]),
         response
       )
     } else {
       pump(
-        fs.createReadStream(scheme),
+        fs.createReadStream(SCHEME),
         ndjson.parse(),
         through2.obj(function (chunk, _, done) {
-          this.push(chunk[0] + '\n')
+          separator(this)
+          this.push(chunk[0])
           done()
         }),
         response
@@ -64,5 +74,13 @@ module.exports = function (log, request, response) {
   } else {
     response.statusCode = 404
     response.end()
+  }
+
+  function separator (through) {
+    if (first) {
+      first = false
+    } else {
+      through.push('\n')
+    }
   }
 }
