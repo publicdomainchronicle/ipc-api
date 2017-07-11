@@ -1,0 +1,21 @@
+{
+  "name": "ipc-api",
+  "version": "0.0.0",
+  "private": true,
+  "devDependencies": {
+    "concat-stream": "^1.6.0",
+    "dev-null": "^0.1.1",
+    "istanbul": "^0.4.5",
+    "json-parse-errback": "^2.0.1",
+    "tape": "^4.7.0"
+  },
+  "scripts": {
+    "test": "NODE_ENV=test tape test/*.test.js",
+    "precoverage": "NODE_ENV=test istanbul cover -- tape test/*.test.js",
+    "coverage": "istanbul check-coverage coverage/coverage.json"
+  },
+  "dependencies": {
+    "pino": "^4.7.0",
+    "uuid": "^3.1.0"
+  }
+}
