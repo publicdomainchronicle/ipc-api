@@ -10,10 +10,10 @@ var through2 = require('through2')
 var url = require('url')
 var uuid = require('uuid').v4
 
-var META = {
-  name: require('./package.json').name,
-  version: require('./package.json').version
-}
+var META = (
+  require('./package.json').name + ' ' +
+  require('./package.json').version
+)
 
 var SCHEME = path.join(__dirname, 'data', 'ipc_scheme.json')
 var CATCHWORDS = path.join(__dirname, 'data', 'ipc_catchwordindex.json')
@@ -62,8 +62,8 @@ module.exports = function (log, request, response) {
 
   var parsed = url.parse(request.url, true)
   if (parsed.pathname === '/') {
-    response.setHeader('Content-Type', 'application/json')
-    response.end(JSON.stringify(META))
+    response.setHeader('Content-Type', 'text/plain')
+    response.end(META)
   } else if (parsed.pathname === '/classifications') {
     response.setHeader('Content-Type', 'text/plain')
     var first = true

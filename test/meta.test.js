@@ -12,27 +12,11 @@ tape.test('GET /', function (test) {
         'responds 200'
       )
       test.equal(
-        response.headers['content-type'], 'application/json',
-        'application/json'
+        response.headers['content-type'], 'text/plain',
+        'text/plain'
       )
-      response.pipe(concat(function (body) {
-        parse(body, function (error, parsed) {
-          if (error) {
-            test.error(error)
-          } else {
-            test.equal(
-              typeof parsed.name, 'string',
-              'name is string'
-            )
-            test.equal(
-              typeof parsed.version, 'string',
-              'version is string'
-            )
-          }
-          test.end()
-          close()
-        })
-      }))
+      test.end()
+      close()
     })
   })
 })
