@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 var Parser = require('node-expat').Parser
-var parseSymbol = require('./symbol')
+var reformat = require('./reformat')
 
 var descriptions = []
 var elementStack = []
@@ -40,25 +40,6 @@ var parser = new Parser('UTF-8')
   .on('error', function (error) {
     console.error(error)
   })
-
-function reformat (string) {
-  if (string.length === 14) {
-    var parsed = parseSymbol(string)
-    return (
-      parsed.section + pad(parsed.class) + parsed.subclass + ' ' +
-      parsed.group + '/' + pad(parsed.subgroup)
-    )
-  } else {
-    return string
-  }
-}
-
-function pad (argument) {
-  var string = argument.toString()
-  return string.length === 1
-    ? ('0' + string)
-    : string
-}
 
 function isNumeric (kind) {
   return /^[1-9]$/.test(kind)
