@@ -49,6 +49,7 @@ pump(
           callback(null, IPCS)
         })
       })
+      queue = undefined
     }
   }
 )
