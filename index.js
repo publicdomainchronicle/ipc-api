@@ -1,10 +1,17 @@
-var uuid = require('uuid').v4
+var fs = require('fs')
+var ndjson = require('ndjson')
+var path = require('path')
+var pump = require('pump')
+var through2 = require('through2')
 var url = require('url')
+var uuid = require('uuid').v4
 
 var META = {
   name: require('./package.json').name,
   version: require('./package.json').version
 }
+
+var scheme = path.join(__dirname, 'data', 'ipc_scheme.json')
 
 module.exports = function (log, request, response) {
   request.log = log.child({request: uuid()})
@@ -17,6 +24,17 @@ module.exports = function (log, request, response) {
   if (parsed.pathname === '/') {
     response.setHeader('Content-Type', 'application/json')
     response.end(JSON.stringify(META))
+  } else if (parsed.pathname === '/classifications') {
+    response.setHeader('Content-Type', 'text/plain')
+    pump(
+      fs.createReadStream(scheme),
+      ndjson.parse(),
+      through2.obj(function (chunk, _, done) {
+        this.push(chunk[0] + '\n')
+        done()
+      }),
+      response
+    )
   } else {
     response.statusCode = 404
     response.end()
