@@ -28,8 +28,6 @@ var parser = new Parser('UTF-8')
         console.log(JSON.stringify([
           symbolStack[0],
           descriptions.slice().reverse()
-          // symbolStack.slice().reverse(),
-          // descriptions
         ]))
       }
       descriptions.shift()
