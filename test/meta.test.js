@@ -13,7 +13,7 @@ tape.test('GET /', function (test) {
       )
       test.equal(
         response.headers['content-type'], 'application/json',
-        'responds 200'
+        'application/json'
       )
       response.pipe(concat(function (body) {
         parse(body, function (error, parsed) {
