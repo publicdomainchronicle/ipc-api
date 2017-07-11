@@ -15,9 +15,12 @@
     "test": "NODE_ENV=test tape test/*.test.js",
     "precoverage": "NODE_ENV=test istanbul cover -- tape test/*.test.js",
     "coverage": "istanbul check-coverage coverage/coverage.json",
+    "data": "make",
+    "prestart": "npm run data",
     "lint": "standard && standard-markdown"
   },
   "dependencies": {
+    "node-expat": "^2.3.16",
     "pino": "^4.7.0",
     "uuid": "^3.1.0"
   }

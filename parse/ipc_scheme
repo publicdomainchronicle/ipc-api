@@ -1,0 +1,84 @@
+#!/usr/bin/env node
+var Parser = require('node-expat').Parser
+var parseSymbol = require('./symbol')
+
+var descriptions = []
+var elementStack = []
+var kindStack = []
+var symbolStack = []
+
+var parser = new Parser('UTF-8')
+  .on('startElement', function (name, attributes) {
+    elementStack.unshift(name)
+    if (name === 'ipcEntry') {
+      descriptions.unshift([])
+      symbolStack.unshift(reformat(attributes.symbol))
+      kindStack.unshift(attributes.kind)
+    }
+  })
+  .on('text', function (text) {
+    if (inRelevantEntry() && inTitlePart()) {
+      descriptions[0].push(text)
+    }
+  })
+  .on('endElement', function (name) {
+    elementStack.shift()
+    if (name === 'ipcEntry') {
+      if (kindStack[0] === 'm' || isNumeric(kindStack[0])) {
+        console.log(JSON.stringify([
+          symbolStack[0],
+          descriptions.slice().reverse()
+          // symbolStack.slice().reverse(),
+          // descriptions
+        ]))
+      }
+      descriptions.shift()
+      symbolStack.shift()
+      kindStack.shift()
+    }
+  })
+  .on('error', function (error) {
+    console.error(error)
+  })
+
+function reformat (string) {
+  if (string.length === 14) {
+    var parsed = parseSymbol(string)
+    return (
+      parsed.section + pad(parsed.class) + parsed.subclass + ' ' +
+      parsed.group + '/' + pad(parsed.subgroup)
+    )
+  } else {
+    return string
+  }
+}
+
+function pad (argument) {
+  var string = argument.toString()
+  return string.length === 1
+    ? ('0' + string)
+    : string
+}
+
+function isNumeric (kind) {
+  return /^[1-9]$/.test(kind)
+}
+
+var relevantKinds = ['s', 't', 'c', 'u', 'm']
+
+function inRelevantEntry () {
+  return (
+    relevantKinds.indexOf(kindStack[0]) !== -1 ||
+    isNumeric(kindStack[0])
+  )
+}
+
+var titlePart = ['text', 'titlePart', 'title', 'textBody']
+
+function inTitlePart () {
+  return titlePart.every(function (name, index) {
+    return elementStack[index] === name
+  })
+}
+
+process.stdin.pipe(parser)
