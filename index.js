@@ -50,46 +50,52 @@ module.exports = function (log, request, response) {
           var upper = search.toUpperCase()
 
           // Catchwords
-          data.catchwords.forEach(function (catchword) {
-            if (fuzzysearch(lower, catchword[0])) {
-              separator()
-              response.write(
-                catchword[0] + '\t' +
-                catchword[1]
-                  .reduce(function (list, ipc) {
-                    if (ipc.includes(' ')) {
-                      return list.concat(ipc)
-                    } else {
-                      return list.concat(
-                        data.ipcs.filter(function (otherIPC) {
-                          return otherIPC[0].startsWith(ipc)
-                        })
-                      )
-                    }
-                  }, [])
-                  .join(',')
-              )
-            }
+          setImmediate(function () {
+            data.catchwords.forEach(function (catchword) {
+              if (fuzzysearch(lower, catchword[0])) {
+                separator()
+                response.write(
+                  catchword[0] + '\t' +
+                  catchword[1]
+                    .reduce(function (list, ipc) {
+                      if (ipc.includes(' ')) {
+                        return list.concat(ipc)
+                      } else {
+                        return list.concat(
+                          data.ipcs.filter(function (otherIPC) {
+                            return otherIPC[0].startsWith(ipc)
+                          })
+                        )
+                      }
+                    }, [])
+                    .join(',')
+                )
+              }
+            })
           })
 
-          // Classifications
-          data.ipcs.forEach(function (ipc) {
-            var description = ipc[1]
-              .map(function (element) {
-                return element.join('; ')
-              })
-              .join(': ')
-              .toLowerCase()
-            if (
-              fuzzysearch(lower, description) ||
-              ipc[0].indexOf(upper) !== -1
-            ) {
-              separator(this)
-              response.write(ipc[0] + '\t' + description)
-            }
+          setImmediate(function () {
+            // Classifications
+            data.ipcs.forEach(function (ipc) {
+              var description = ipc[1]
+                .map(function (element) {
+                  return element.join('; ')
+                })
+                .join(': ')
+                .toLowerCase()
+              if (
+                fuzzysearch(lower, description) ||
+                ipc[0].indexOf(upper) !== -1
+              ) {
+                separator(this)
+                response.write(ipc[0] + '\t' + description)
+              }
+            })
           })
 
-          response.end()
+          setImmediate(function () {
+            response.end()
+          })
         }
       })
     } else {
