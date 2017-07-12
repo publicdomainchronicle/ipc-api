@@ -1,5 +1,4 @@
 var flushWriteStream = require('flush-write-stream')
-var from2Array = require('from2-array')
 var fs = require('fs')
 var fuzzysearch = require('fuzzysearch')
 var multistream = require('multistream')
@@ -17,7 +16,6 @@ var META = (
 
 var SCHEME = path.join(__dirname, 'data', 'ipc_scheme.json')
 var CATCHWORDS = path.join(__dirname, 'data', 'ipc_catchwordindex.json')
-
 
 // The JSON file with scheme data is about 30MB on disk.
 // Load just the codes for all IPC subgroup codes into
@@ -76,7 +74,7 @@ module.exports = function (log, request, response) {
     response.setHeader('Content-Type', 'text/plain')
     var first = true
     if (parsed.query.prefix) {
-      var prefix = parsed.query.prefix
+      var prefix = parsed.query.prefix.toUpperCase()
       allIPCS(function (error, ipcs) {
         if (error) {
           response.statusCode = 500
@@ -92,7 +90,7 @@ module.exports = function (log, request, response) {
         }
       })
     } else if (parsed.query.search) {
-      var search = parsed.query.search
+      var search = parsed.query.search.toLowerCase()
       var count = 0
       pump(
         multistream(function (ready) {
@@ -131,22 +129,31 @@ module.exports = function (log, request, response) {
               }
             })
           } else if (count === 2) {
-            allIPCS(function (error, ipcs) {
-              if (error) {
-                ready(error)
-              } else {
-                ready(null, pump(
-                  from2Array.obj(ipcs),
-                  through2.obj(function (chunk, _, done) {
-                    if (chunk.includes(search)) {
-                      separator(this)
-                      this.push('\t' + chunk)
-                    }
-                    done()
+            var lower = search.toLowerCase()
+            var upper = search.toUpperCase()
+            ready(null, pump(
+              fs.createReadStream(SCHEME),
+              ndjson.parse(),
+              through2.obj(function (chunk, _, done) {
+                var description = chunk[1]
+                  .map(function (element) {
+                    return element.join('; ')
                   })
-                ))
-              }
-            })
+                  .join(': ')
+                  .toLowerCase()
+                if (
+                  fuzzysearch(lower, description) ||
+                  chunk[0].indexOf(upper) !== -1
+                ) {
+                  separator(this)
+                  this.push(
+                    chunk[0] + '\t' +
+                    description
+                  )
+                }
+                done()
+              })
+            ))
           } else {
             ready(null, null)
           }

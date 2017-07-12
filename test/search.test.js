@@ -38,6 +38,40 @@ tape.test('GET /classifications?search={subgroup catchword}', function (test) {
   })
 })
 
+tape.test('GET /classifications?search={class description}', function (test) {
+  server(function (port, close) {
+    http.get({
+      port: port,
+      path: (
+        '/classifications' +
+        '?search=' + encodeURIComponent('animal-drawn ploughs')
+      )
+    }, function (response) {
+      test.equal(
+        response.statusCode, 200,
+        'responds 200'
+      )
+      test.equal(
+        response.headers['content-type'], 'text/plain',
+        'text/plain'
+      )
+      response.pipe(concat(function (body) {
+        var items = body
+          .toString()
+          .split('\n')
+        test.assert(
+          items.some(function (element) {
+            return element.startsWith('A01B 3/20')
+          }),
+          'includes A01B 3/20'
+        )
+        test.end()
+        close()
+      }))
+    })
+  })
+})
+
 tape.test('GET /classifications?search={subclass catchword}', function (test) {
   server(function (port, close) {
     http.get({
@@ -95,7 +129,7 @@ tape.test('GET /classifications?search={IPC prefix}', function (test) {
           .split('\n')
         test.assert(
           items.some(function (element) {
-            return element.endsWith('B43K 7/00')
+            return element.startsWith('B43K 7/00')
           }),
           'includes B43K 7/00'
         )
@@ -129,7 +163,7 @@ tape.test('GET /classifications?prefix=', function (test) {
           .split('\n')
         test.assert(
           items.some(function (element) {
-            return element.endsWith('B43K 7/00')
+            return element.startsWith('B43K 7/00')
           }),
           'includes B43K 7/00'
         )
