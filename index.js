@@ -91,17 +91,38 @@ module.exports = function (log, request, response) {
         multistream(function (ready) {
           count++
           if (count === 1) {
-            ready(null, pump(
-              fs.createReadStream(CATCHWORDS),
-              ndjson.parse(),
-              through2.obj(function (chunk, _, done) {
-                if (fuzzysearch(search, chunk[0])) {
-                  separator(this)
-                  this.push(chunk[0] + '\t' + chunk[1].join(','))
-                }
-                done()
-              })
-            ))
+            allIPCS(function (error, ipcs) {
+              if (error) {
+                ready(error)
+              } else {
+                ready(null, pump(
+                  fs.createReadStream(CATCHWORDS),
+                  ndjson.parse(),
+                  through2.obj(function (chunk, _, done) {
+                    if (fuzzysearch(search, chunk[0])) {
+                      separator(this)
+                      this.push(
+                        chunk[0] + '\t' +
+                        chunk[1]
+                          .reduce(function (list, ipc) {
+                            if (ipc.includes(' ')) {
+                              return list.concat(ipc)
+                            } else {
+                              return list.concat(
+                                ipcs.filter(function (otherIPC) {
+                                  return otherIPC.startsWith(ipc)
+                                })
+                              )
+                            }
+                          }, [])
+                          .join(',')
+                      )
+                    }
+                    done()
+                  })
+                ))
+              }
+            })
           } else if (count === 2) {
             allIPCS(function (error, ipcs) {
               if (error) {

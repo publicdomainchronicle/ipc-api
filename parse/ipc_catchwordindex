@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-var fs = require('fs')
 var Parser = require('node-expat').Parser
 var reformat = require('./reformat')
 
@@ -7,7 +6,7 @@ var data = {}
 var currentElement = null
 var currentIndication = null
 var parser = new Parser('UTF-8')
-  .on('error', function () {
+  .on('error', function (error) {
     console.error(error)
     process.exit(1)
   })
@@ -30,10 +29,7 @@ var parser = new Parser('UTF-8')
   })
   .once('end', function () {
     Object.keys(data).forEach(function (key) {
-      // TODO: Expand prefixes to all known full IPCs
-      var ipcs = data[key].filter(function (ipc) {
-        return ipc.length === 14
-      })
+      var ipcs = data[key]
       if (ipcs.length !== 0) {
         console.log(JSON.stringify([
           key.toLowerCase(),
