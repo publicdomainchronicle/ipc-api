@@ -18,20 +18,15 @@ var META = (
 var SCHEME = path.join(__dirname, 'data', 'ipc_scheme.json')
 var CATCHWORDS = path.join(__dirname, 'data', 'ipc_catchwordindex.json')
 
+
+// The JSON file with scheme data is about 30MB on disk.
+// Load just the codes for all IPC subgroup codes into
+// memory immediately. If requests come in before the list
+// is loaded, stick them in a queue to call back later.
 var IPCS
+var tmp = []
 var queue = []
 
-function allIPCS (callback) {
-  if (IPCS) {
-    setImmediate(function () {
-      callback(null, IPCS)
-    })
-  } else {
-    queue.push(callback)
-  }
-}
-
-var tmp = []
 pump(
   fs.createReadStream(SCHEME),
   ndjson.parse(),
@@ -53,6 +48,18 @@ pump(
     }
   }
 )
+
+// Calls back with an array of all IPC subgroup codes,
+// queueing the callback if the data hasn't been read yet.
+function allIPCS (callback) {
+  if (IPCS) {
+    setImmediate(function () {
+      callback(null, IPCS)
+    })
+  } else {
+    queue.push(callback)
+  }
+}
 
 module.exports = function (log, request, response) {
   request.log = log.child({request: uuid()})
