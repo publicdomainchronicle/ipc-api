@@ -9,7 +9,9 @@ var queue = []
 
 module.exports = function (callback) {
   if (data) {
-    callback(null, data)
+    setImmediate(function () {
+      callback(null, data)
+    })
   } else {
     queue.push(callback)
   }
@@ -34,8 +36,8 @@ pump(
     done()
   }),
   function (error) {
-    if (error && !errored) {
-      errored = true
+    /* istanbul ignore if */
+    if (error) {
       onError(error)
     } else {
       ipcsDone = true
@@ -54,8 +56,8 @@ pump(
     done()
   }),
   function (error) {
-    if (error && !errored) {
-      errored = true
+    /* istanbul ignore if */
+    if (error) {
       onError(error)
     } else {
       catchwordsDone = true
@@ -64,12 +66,16 @@ pump(
   }
 )
 
+/* istanbul ignore next */
 function onError (error) {
-  queue.forEach(function (callback) {
-    setImmediate(function () {
-      callback(error)
+  if (!error) {
+    errored = true
+    queue.forEach(function (callback) {
+      setImmediate(function () {
+        callback(error)
+      })
     })
-  })
+  }
 }
 
 function onReady () {

@@ -16,6 +16,9 @@ module.exports = function (log, request, response) {
   })
 
   var parsed = url.parse(request.url, true)
+  var limit = parsed.query.limit
+    ? parseInt(parsed.query.limit)
+    : Infinity
   if (parsed.pathname === '/') {
     response.setHeader('Content-Type', 'text/plain')
     response.end(META)
@@ -25,6 +28,7 @@ module.exports = function (log, request, response) {
     if (parsed.query.prefix) {
       var prefix = parsed.query.prefix.toUpperCase()
       loadData(function (error, data) {
+        /* istanbul ignore if */
         if (error) {
           response.statusCode = 500
           response.end()
@@ -33,8 +37,9 @@ module.exports = function (log, request, response) {
             data
               .ipcs
               .filter(function (ipc) {
-                return ipc.startsWith(prefix)
+                return ipc[0].startsWith(prefix)
               })
+              .slice(0, limit)
               .join('\n')
           )
         }
@@ -42,72 +47,78 @@ module.exports = function (log, request, response) {
     } else if (parsed.query.search) {
       var search = parsed.query.search.toLowerCase()
       loadData(function (error, data) {
+        /* istanbul ignore if */
         if (error) {
           response.statusCode = 500
           response.end()
         } else {
           var lower = search.toLowerCase()
           var upper = search.toUpperCase()
+          var index
 
           // Catchwords
-          setImmediate(function () {
-            data.catchwords.forEach(function (catchword) {
-              if (fuzzysearch(lower, catchword[0])) {
-                separator()
-                response.write(
-                  catchword[0] + '\t' +
-                  catchword[1]
-                    .reduce(function (list, ipc) {
-                      if (ipc.includes(' ')) {
-                        return list.concat(ipc)
-                      } else {
-                        return list.concat(
-                          data.ipcs.filter(function (otherIPC) {
-                            return otherIPC[0].startsWith(ipc)
-                          })
-                        )
-                      }
-                    }, [])
-                    .join(',')
-                )
-              }
-            })
-          })
+          for (index = 0; index < data.catchwords.length; index++) {
+            var catchword = data.catchwords[index]
+            if (limit === 0) break
+            if (fuzzysearch(lower, catchword[0])) {
+              separator()
+              response.write(
+                catchword[0] + '\t' +
+                catchword[1]
+                  .reduce(function (list, ipc) {
+                    if (ipc.includes(' ')) {
+                      return list.concat(ipc)
+                    } else {
+                      return list.concat(
+                        data.ipcs.filter(function (otherIPC) {
+                          return otherIPC[0].startsWith(ipc)
+                        })
+                      )
+                    }
+                  }, [])
+                  .join(',')
+                  .replace(/\n/g, ' ')
+              )
+              limit--
+            }
+          }
 
-          setImmediate(function () {
-            // Classifications
-            data.ipcs.forEach(function (ipc) {
-              var description = ipc[1]
-                .map(function (element) {
-                  return element.join('; ')
-                })
-                .join(': ')
-                .toLowerCase()
-              if (
-                fuzzysearch(lower, description) ||
-                ipc[0].indexOf(upper) !== -1
-              ) {
-                separator(this)
-                response.write(ipc[0] + '\t' + description)
-              }
-            })
-          })
+          // Classifications
+          for (index = 0; index < data.ipcs.length; index++) {
+            if (limit === 0) break
+            var ipc = data.ipcs[index]
+            var description = ipc[1]
+              .map(function (element) {
+                return element.join('; ')
+              })
+              .join(': ')
+              .toLowerCase()
+            if (
+              fuzzysearch(lower, description) ||
+              ipc[0].indexOf(upper) !== -1
+            ) {
+              separator(this)
+              response.write(ipc[0] + '\t' + description)
+              limit--
+            }
+          }
 
-          setImmediate(function () {
-            response.end()
-          })
+          response.end()
         }
       })
     } else {
       loadData(function (error, data) {
+        /* istanbul ignore if */
         if (error) {
           response.statusCode = 500
           response.end()
         } else {
-          data.ipcs.forEach(function (ipc) {
-            separator()
-            response.write(ipc[0])
-          })
+          data.ipcs
+            .slice(0, limit)
+            .forEach(function (ipc) {
+              separator()
+              response.write(ipc[0])
+            })
           response.end()
         }
       })

@@ -16,10 +16,39 @@ tape.test('GET /classifications', function (test) {
       )
       test.equal(
         response.headers['content-type'], 'text/plain',
-        'responds 200'
+        'text/plain'
       )
       test.end()
       close()
+    })
+  })
+})
+
+tape.test('GET /classifications?limit', function (test) {
+  server(function (port, close) {
+    http.get({
+      port: port,
+      path: '/classifications?limit=10'
+    }, function (response) {
+      test.equal(
+        response.statusCode, 200,
+        'responds 200'
+      )
+      test.equal(
+        response.headers['content-type'], 'text/plain',
+        'text/plain'
+      )
+      response.pipe(concat(function (body) {
+        var items = body
+          .toString()
+          .split('\n')
+        test.equal(
+          items.length, 10,
+          'serves 10'
+        )
+        test.end()
+        close()
+      }))
     })
   })
 })

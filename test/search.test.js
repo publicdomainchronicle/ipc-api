@@ -140,13 +140,79 @@ tape.test('GET /classifications?search={IPC prefix}', function (test) {
   })
 })
 
+tape.test('GET /classifications?search=&limit=', function (test) {
+  server(function (port, close) {
+    http.get({
+      port: port,
+      path: (
+        '/classifications' +
+        '?search=' + encodeURIComponent('fruit') +
+        '&limit=10'
+      )
+    }, function (response) {
+      test.equal(
+        response.statusCode, 200,
+        'responds 200'
+      )
+      test.equal(
+        response.headers['content-type'], 'text/plain',
+        'text/plain'
+      )
+      response.pipe(concat(function (body) {
+        var items = body
+          .toString()
+          .split('\n')
+        test.equal(
+          items.length, 10,
+          'serves 10 results'
+        )
+        test.end()
+        close()
+      }))
+    })
+  })
+})
+
+tape.test('GET /classifications?prefix=&limit=', function (test) {
+  server(function (port, close) {
+    http.get({
+      port: port,
+      path: (
+        '/classifications' +
+        '?prefix=' + encodeURIComponent('B43K') +
+        '&limit=10'
+      )
+    }, function (response) {
+      test.equal(
+        response.statusCode, 200,
+        'responds 200'
+      )
+      test.equal(
+        response.headers['content-type'], 'text/plain',
+        'text/plain'
+      )
+      response.pipe(concat(function (body) {
+        var items = body
+          .toString()
+          .split('\n')
+        test.equal(
+          items.length, 10,
+          'serves 10 results'
+        )
+        test.end()
+        close()
+      }))
+    })
+  })
+})
+
 tape.test('GET /classifications?prefix=', function (test) {
   server(function (port, close) {
     http.get({
       port: port,
       path: (
         '/classifications' +
-        '?search=' + encodeURIComponent('B43K')
+        '?prefix=' + encodeURIComponent('B43K')
       )
     }, function (response) {
       test.equal(
@@ -169,7 +235,7 @@ tape.test('GET /classifications?prefix=', function (test) {
         )
         test.assert(
           items.length > 100,
-          'services >100 IPCs'
+          'serves >100 IPCs'
         )
         test.end()
         close()
