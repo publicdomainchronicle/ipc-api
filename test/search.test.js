@@ -27,7 +27,7 @@ tape.test('GET /classifications?search={subgroup catchword}', function (test) {
           .split('\n')
         test.assert(
           items.some(function (element) {
-            return element.endsWith('B43K 7/00')
+            return element.startsWith('B43K 7/00')
           }),
           'includes B43K 7/00'
         )
@@ -78,7 +78,7 @@ tape.test('GET /classifications?search={subclass catchword}', function (test) {
       port: port,
       path: (
         '/classifications' +
-        '?search=' + encodeURIComponent('measuring acceleration')
+        '?search=' + encodeURIComponent('traps for animals')
       )
     }, function (response) {
       test.equal(
@@ -95,9 +95,9 @@ tape.test('GET /classifications?search={subclass catchword}', function (test) {
           .split('\n')
         test.assert(
           items.some(function (element) {
-            return element.includes('G01P 15/00')
+            return element.includes('A01M 23/20')
           }),
-          'includes G01P 15/00'
+          'includes A01M 23/20'
         )
         test.end()
         close()

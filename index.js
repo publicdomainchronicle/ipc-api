@@ -1,3 +1,4 @@
+var descriptionOf = require('./description')
 var fuzzysearch = require('fuzzysearch')
 var loadData = require('./load-data')
 var url = require('url')
@@ -63,13 +64,14 @@ module.exports = function (log, request, response) {
             if (fuzzysearch(lower, catchword[0])) {
               separator()
               response.write(
-                catchword[0] + '\t' +
                 catchword[1]
                   .reduce(function (list, ipc) {
                     return list.concat(ipc)
                   }, [])
                   .join(',')
-                  .replace(/\n/g, ' ')
+                  .replace(/\n/g, ' ') +
+                '\t' +
+                catchword[0]
               )
               limit--
             }
@@ -79,14 +81,9 @@ module.exports = function (log, request, response) {
           for (index = 0; index < data.ipcs.length; index++) {
             if (limit === 0) break
             var ipc = data.ipcs[index]
-            var description = ipc[1]
-              .map(function (element) {
-                return element.join('; ')
-              })
-              .join(': ')
-              .toLowerCase()
+            var description = descriptionOf(ipc[1])
             if (
-              fuzzysearch(lower, description) ||
+              description.toLowerCase().includes(lower) ||
               ipc[0].indexOf(upper) !== -1
             ) {
               separator(this)
