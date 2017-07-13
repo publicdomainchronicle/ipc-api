@@ -1,5 +1,3 @@
-SHELL := /bin/bash
-
 FILES=ipc_scheme ipc_catchwordindex
 RELEASE=20170101
 
