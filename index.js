@@ -76,7 +76,7 @@ module.exports = function (log, request, response) {
           for (index = 0; index < data.catchwords.length; index++) {
             var catchword = data.catchwords[index]
             if (limit === 0) break
-            if (catchword.includes(lower)) {
+            if (catchword[0].includes(lower)) {
               separator()
               response.write(
                 catchword[1]

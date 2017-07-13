@@ -11,7 +11,7 @@ data:
 data/tmp:
 	mkdir -p $@
 
-.PRECIOUS: data/%.zip data/%.xml
+.PRECIOUS: data/%.zip
 
 data/%.zip: | data
 	curl -o "$@" "http://www.wipo.int/ipc/itos4ipc/ITSupport_and_download_area/$(RELEASE)/MasterFiles/$*_$(RELEASE).zip"
