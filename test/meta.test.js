@@ -14,9 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-var concat = require('concat-stream')
 var http = require('http')
-var parse = require('json-parse-errback')
 var server = require('./server')
 var tape = require('tape')
 

@@ -34,4 +34,3 @@ function pad (argument) {
     ? ('0' + string)
     : string
 }
-

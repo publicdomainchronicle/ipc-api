@@ -84,7 +84,7 @@ pump(
 
 /* istanbul ignore next */
 function onError (error) {
-  if (!error) {
+  if (!errored) {
     errored = true
     queue.forEach(function (callback) {
       setImmediate(function () {
