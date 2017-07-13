@@ -18,7 +18,10 @@ var parser = new Parser('UTF-8')
   })
   .on('text', function (text) {
     if (inRelevantEntry() && inTitlePart()) {
-      descriptions[0].push(text)
+      text = text.trim()
+      if (text.length !== 0) {
+        descriptions[0].push(text)
+      }
     }
   })
   .on('endElement', function (name) {
