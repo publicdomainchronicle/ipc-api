@@ -29,7 +29,9 @@ var parser = new Parser('UTF-8')
   })
   .once('end', function () {
     Object.keys(data).forEach(function (key) {
-      var ipcs = data[key]
+      var ipcs = data[key].filter(function (ipc) {
+        return ipc.length === 14
+      })
       if (ipcs.length !== 0) {
         console.log(JSON.stringify([
           key.toLowerCase(),

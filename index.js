@@ -66,15 +66,7 @@ module.exports = function (log, request, response) {
                 catchword[0] + '\t' +
                 catchword[1]
                   .reduce(function (list, ipc) {
-                    if (ipc.includes(' ')) {
-                      return list.concat(ipc)
-                    } else {
-                      return list.concat(
-                        data.ipcs.filter(function (otherIPC) {
-                          return otherIPC[0].startsWith(ipc)
-                        })
-                      )
-                    }
+                    return list.concat(ipc)
                   }, [])
                   .join(',')
                   .replace(/\n/g, ' ')
