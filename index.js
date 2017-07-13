@@ -1,5 +1,4 @@
 var descriptionOf = require('./description')
-var fuzzysearch = require('fuzzysearch')
 var loadData = require('./load-data')
 var url = require('url')
 var uuid = require('uuid').v4
@@ -61,7 +60,7 @@ module.exports = function (log, request, response) {
           for (index = 0; index < data.catchwords.length; index++) {
             var catchword = data.catchwords[index]
             if (limit === 0) break
-            if (fuzzysearch(lower, catchword[0])) {
+            if (catchword.includes(lower)) {
               separator()
               response.write(
                 catchword[1]
