@@ -131,7 +131,7 @@ tape.test(
   }
 )
 
-tape.test(
+tape.only(
   'GET /classifications?search={subclass catchword}',
   function (test) {
     server(function (port, close) {
@@ -151,15 +151,57 @@ tape.test(
           'text/plain'
         )
         response.pipe(concat(function (body) {
-          var items = body
-            .toString()
-            .split('\n')
-          test.assert(
-            items.some(function (element) {
-              return element.includes('A01M 23/20')
-            }),
-            'includes A01M 23/20'
-          )
+          /* eslint-disable max-len */
+          var expected = {
+            A: {
+              description: ['HUMAN NECESSITIES'],
+              children: {
+                '01': {
+                  description: [
+                    'AGRICULTURE', 'FORESTRY', 'ANIMAL HUSBANDRY',
+                    'HUNTING', 'TRAPPING', 'FISHING'
+                  ],
+                  children: {
+                    M: {
+                      description: [
+                        'CATCHING, TRAPPING OR SCARING OF ANIMALS',
+                        'APPARATUS FOR THE DESTRUCTION OF NOXIOUS ANIMALS OR NOXIOUS PLANTS'
+                      ],
+                      children: {
+                        23: {
+                          description: ['Traps for animals'],
+                          children: {
+                            '06': [['Collecting-traps'], ['with tipping platforms'], ['with locking mechanism for the tipping platform']],
+                            '04': [['Collecting-traps'], ['with tipping platforms']],
+                            '08': [['Collecting-traps'], ['with approaches permitting entry only']],
+                            '10': [['Collecting-traps'], ['with rotating cylinders or turnstiles']],
+                            '12': [['Collecting-traps'], ['with devices for throwing the animal to a collecting chamber']],
+                            '14': [['Collecting-traps'], ['Other traps automatically reset']],
+                            '02': [['Collecting-traps']],
+                            '18': [['Box traps'], ['with pivoted closure flaps']],
+                            '20': [['Box traps'], ['with dropping doors or slides']],
+                            '22': [['Box traps'], ['with dropping covers']],
+                            '16': [['Box traps']],
+                            '28': [['Jaw or like spring traps'], ['of the double-jaw or pincer type'], ['Jaw trap setting-devices']],
+                            '26': [['Jaw or like spring traps'], ['of the double-jaw or pincer type']],
+                            '30': [['Jaw or like spring traps'], ['Break-back traps']],
+                            '32': [['Jaw or like spring traps'], ['Racket net traps']],
+                            '34': [['Jaw or like spring traps'], ['with snares']],
+                            '36': [['Jaw or like spring traps'], ['with arrangements for piercing the victim']],
+                            '24': [['Jaw or like spring traps']],
+                            '38': [['Electric traps']],
+                            '00': []
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+          /* eslint-enable max-len */
+          test.deepEqual(JSON.parse(body), expected)
           test.end()
           close()
         }))

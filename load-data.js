@@ -35,7 +35,8 @@ module.exports = function (callback) {
 
 var reading = {
   catchwords: [],
-  ipcs: []
+  ipcs: [],
+  tree: require('./data/ipc_tree')
 }
 
 var catchwordsDone = false

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 var flushWriteStream = require('flush-write-stream')
 var ndJSON = require('ndjson')
+var parse = require('./ipc')
 var pump = require('pump')
 
 var data = {}
@@ -63,14 +64,3 @@ pump(
     console.log(JSON.stringify(data, null, 2))
   }
 )
-
-function parse (symbol) {
-  var split = symbol.split(' ')[1].split('/')
-  return {
-    section: symbol[0],
-    class: symbol.substr(1, 2),
-    subclass: symbol[3],
-    group: split[0],
-    subgroup: split[1]
-  }
-}

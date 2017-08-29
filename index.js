@@ -15,7 +15,10 @@ limitations under the License.
 */
 
 var descriptionOf = require('./description')
+var get = require('keyarray-get')
 var loadData = require('./load-data')
+var parse = require('./parse/ipc')
+var setp = require('setp')
 var url = require('url')
 var uuid = require('uuid').v4
 
@@ -72,22 +75,14 @@ module.exports = function (log, request, response) {
           var upper = search.toUpperCase()
           var index
 
+          var ipcs = []
+
           // Catchwords
           for (index = 0; index < data.catchwords.length; index++) {
             var catchword = data.catchwords[index]
             if (limit === 0) break
             if (catchword[0].includes(lower)) {
-              separator()
-              response.write(
-                catchword[1]
-                  .reduce(function (list, ipc) {
-                    return list.concat(ipc)
-                  }, [])
-                  .join(',')
-                  .replace(/\n/g, ' ') +
-                '\t' +
-                catchword[0]
-              )
+              ipcs.push(catchword[0])
               limit--
             }
           }
@@ -101,13 +96,47 @@ module.exports = function (log, request, response) {
               description.toLowerCase().includes(lower) ||
               ipc[0].indexOf(upper) !== -1
             ) {
-              separator(this)
-              response.write(ipc[0] + '\t' + description)
+              ipcs.push(ipc[0])
               limit--
             }
           }
 
-          response.end()
+          var groups = []
+          ipcs.forEach(function (ipc) {
+            var group = ipc.slice(0, ipc.indexOf('/'))
+            if (groups.indexOf(group) === -1) {
+              groups.push(group)
+            }
+          })
+          var tree = {}
+          groups.forEach(function (group) {
+            var parsed = parse(group + '/00')
+            var components = ['section', 'class', 'subclass', 'group']
+            components.forEach(function (key, index, list) {
+              var descriptionKeys = list
+                .slice(0, index + 1)
+                .reduce(function (keys, key, index) {
+                  return keys.concat(
+                    index === 0
+                      ? parsed[key]
+                      : ['children', parsed[key]]
+                  )
+                }, [])
+                .concat('description')
+              setp(tree, descriptionKeys, get(data.tree, descriptionKeys))
+            })
+            var subgroupKeys = components
+              .reduce(function (keys, key, index) {
+                return keys.concat(
+                  index === 0
+                    ? parsed[key]
+                    : ['children', parsed[key]]
+                )
+              }, [])
+            setp(tree, subgroupKeys, get(data.tree, subgroupKeys))
+          })
+
+          response.end(JSON.stringify(tree))
         }
       })
     } else {
