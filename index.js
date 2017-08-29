@@ -75,15 +75,24 @@ module.exports = function (log, request, response) {
           var upper = search.toUpperCase()
           var index
 
-          var ipcs = []
+          var groups = []
+          var group
 
           // Catchwords
           for (index = 0; index < data.catchwords.length; index++) {
             var catchword = data.catchwords[index]
             if (limit === 0) break
             if (catchword[0].includes(lower)) {
-              ipcs.push(catchword[0])
-              limit--
+              var matches = catchword[1]
+              var ipcIndex = 0
+              while (ipcIndex < matches.length && limit !== 0) {
+                group = symbolToGroup(matches[ipcIndex])
+                if (groups.indexOf(group) === -1) {
+                  groups.push(group)
+                  limit--
+                }
+                ipcIndex++
+              }
             }
           }
 
@@ -91,23 +100,20 @@ module.exports = function (log, request, response) {
           for (index = 0; index < data.ipcs.length; index++) {
             if (limit === 0) break
             var ipc = data.ipcs[index]
+            group = symbolToGroup(ipc[0])
             var description = descriptionOf(ipc[1])
             if (
-              description.toLowerCase().includes(lower) ||
-              ipc[0].indexOf(upper) !== -1
+              (
+                description.toLowerCase().includes(lower) ||
+                ipc[0].indexOf(upper) !== -1
+              ) &&
+              !groups.includes(group)
             ) {
-              ipcs.push(ipc[0])
+              groups.push(group)
               limit--
             }
           }
 
-          var groups = []
-          ipcs.forEach(function (ipc) {
-            var group = ipc.slice(0, ipc.indexOf('/'))
-            if (groups.indexOf(group) === -1) {
-              groups.push(group)
-            }
-          })
           var tree = {}
           groups.forEach(function (group) {
             var parsed = parse(group + '/00')
@@ -123,7 +129,8 @@ module.exports = function (log, request, response) {
                   )
                 }, [])
                 .concat('description')
-              setp(tree, descriptionKeys, get(data.tree, descriptionKeys))
+              var description = get(data.tree, descriptionKeys)
+              setp(tree, descriptionKeys, description)
             })
             var subgroupKeys = components
               .reduce(function (keys, key, index) {
@@ -168,4 +175,8 @@ module.exports = function (log, request, response) {
       response.write('\n')
     }
   }
+}
+
+function symbolToGroup (symbol) {
+  return symbol.slice(0, symbol.indexOf('/'))
 }
