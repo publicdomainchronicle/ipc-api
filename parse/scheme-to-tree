@@ -14,31 +14,43 @@ pump(
     var parsed = parse(symbol)
 
     if (!data.hasOwnProperty(parsed.section)) {
-      data[parsed.section] = {}
+      data[parsed.section] = {
+        description: description[0],
+        children: {}
+      }
     }
-    var sectionChildren = data[parsed.section]
+    var sectionChildren = data[parsed.section].children
 
     var classString = parsed.class
     if (!sectionChildren.hasOwnProperty(classString)) {
-      sectionChildren[classString] = {}
+      sectionChildren[classString] = {
+        description: description[1],
+        children: {}
+      }
     }
-    var classChildren = sectionChildren[parsed.class]
+    var classChildren = sectionChildren[parsed.class].children
 
     var subclassString = parsed.subclass
     if (!classChildren.hasOwnProperty(subclassString)) {
-      classChildren[subclassString] = {}
+      classChildren[subclassString] = {
+        description: description[2],
+        children: {}
+      }
     }
-    var subclassChildren = classChildren[subclassString]
+    var subclassChildren = classChildren[subclassString].children
 
     var groupString = parsed.group
     if (!subclassChildren.hasOwnProperty(groupString)) {
-      subclassChildren[groupString] = {}
+      subclassChildren[groupString] = {
+        description: description[3],
+        children: {}
+      }
     }
-    var groupChildren = subclassChildren[parsed.group]
+    var groupChildren = subclassChildren[parsed.group].children
 
     var subgroupString = parsed.subgroup
     if (!groupChildren.hasOwnProperty(subgroupString)) {
-      groupChildren[subgroupString] = description
+      groupChildren[subgroupString] = description.slice(4)
     }
 
     done()
