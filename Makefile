@@ -1,7 +1,7 @@
-FILES=ipc_scheme ipc_catchwordindex
+FILES=ipc_scheme ipc_catchwordindex ipc_tree
 RELEASE=20170101
 
-all: $(addprefix data/,$(addsuffix .json,$(FILES)))
+all: $(addprefix data/,$(addsuffix .json,$(FILES))) data/ipc_tree.json
 
 data:
 	mkdir -p data
@@ -24,3 +24,6 @@ data/%.xml: data/%.zip | data data/tmp
 
 data/%.json: data/%.xml parse/%
 	parse/$* < $< > $@
+
+data/ipc_tree.json: data/ipc_scheme.json
+	parse/scheme-to-tree < $< > $@

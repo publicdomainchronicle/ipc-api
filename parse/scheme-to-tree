@@ -1,0 +1,64 @@
+#!/usr/bin/env node
+var flushWriteStream = require('flush-write-stream')
+var ndJSON = require('ndjson')
+var pump = require('pump')
+
+var data = {}
+
+pump(
+  process.stdin,
+  ndJSON.parse({strict: true}),
+  flushWriteStream.obj(function (line, _, done) {
+    var symbol = line[0]
+    var description = line[1]
+    var parsed = parse(symbol)
+
+    if (!data.hasOwnProperty(parsed.section)) {
+      data[parsed.section] = {}
+    }
+    var sectionChildren = data[parsed.section]
+
+    var classString = parsed.class
+    if (!sectionChildren.hasOwnProperty(classString)) {
+      sectionChildren[classString] = {}
+    }
+    var classChildren = sectionChildren[parsed.class]
+
+    var subclassString = parsed.subclass
+    if (!classChildren.hasOwnProperty(subclassString)) {
+      classChildren[subclassString] = {}
+    }
+    var subclassChildren = classChildren[subclassString]
+
+    var groupString = parsed.group
+    if (!subclassChildren.hasOwnProperty(groupString)) {
+      subclassChildren[groupString] = {}
+    }
+    var groupChildren = subclassChildren[parsed.group]
+
+    var subgroupString = parsed.subgroup
+    if (!groupChildren.hasOwnProperty(subgroupString)) {
+      groupChildren[subgroupString] = description
+    }
+
+    done()
+  }),
+  function (error) {
+    if (error) {
+      console.error(error)
+      process.exit(1)
+    }
+    console.log(JSON.stringify(data, null, 2))
+  }
+)
+
+function parse (symbol) {
+  var split = symbol.split(' ')[1].split('/')
+  return {
+    section: symbol[0],
+    class: symbol.substr(1, 2),
+    subclass: symbol[3],
+    group: split[0],
+    subgroup: split[1]
+  }
+}
